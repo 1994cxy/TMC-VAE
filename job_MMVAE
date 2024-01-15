@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -eo pipefail
+shopt -s nullglob globstar
+
+# define TMPDIR, if it's empty
+if [[ -z "$TMPDIR" ]]; then
+    TMPDIR="./tmp"
+fi
+echo "TMPDIR: $TMPDIR"
+
+# activate conda env
+eval "$(conda shell.bash hook)"
+conda activate pytorch_1.12.1_py39
+echo "CONDA_PREFIX: $CONDA_PREFIX"
+
+METHOD="joint_elbo"  # NOTE: valid options are "joint_elbo", "poe", and "moe"
+LIKELIHOOD="laplace"
+DIR_DATA="/data/home/chenxiaoyu/dataset/data"
+DIR_EXPERIMENT="$PWD/runs/tmp"  # NOTE: experiment logs are written here
+PATH_INC_V3="$PWD/logs/pt_inception-2015-12-05-6726825d.pth"
+DIR_FID="$TMPDIR/AAD"
+
+# KUL dataset
+python main_mmvae.py \
+            --unimodal-datapaths-train "XXX/EEG" "/XXX/Speech_stft" \
+            --unimodal-datapaths-test "/XXX/EEG" "/XXX/Speech_stft" \
+            --dataset_partition_file "/XXX" \
+            --pretrained-classifier-paths "$PWD/trained_classifiers/trained_clfs_polyMNIST/pretrained_img_to_digit_clf_m"{0..2} \
+            --dir_experiment="/XXX" \
+            --joint_elbo 'True'\
+            --style_dim=0 \
+            --class_dim=128 \
+            --beta=2.5 \
+            --batch_size=128 \
+            --initial_learning_rate=0.0001 \
+            --eval_freq=5 \
+            --end_epoch=1500 \
+            --train_clf \
+            --win_length=3\
+            --gpu=5\
+            --eeg_band=5\
+            --notes "XXX"\
+
